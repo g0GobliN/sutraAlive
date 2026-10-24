@@ -1,0 +1,5 @@
+.freebuff/
+comparison/
+dist/
+node_modules/
+npm-debug.log*
