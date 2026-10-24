@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SUTRA — A stone gate for the context window</title>
+    <meta
+      name="description"
+      content="A stone gate for the context window. SUTRA runs today as a Hermes Agent plugin: it cuts tool output before the model reads it, labels every removed byte, and keeps the original in a bounded local store — a sutra_restore call away."
+    />
+    <meta name="theme-color" content="#0D0D0D" />
+
+    <meta name="author" content="Vishal Gurung" />
+    <meta name="color-scheme" content="dark" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="SUTRA" />
+    <meta property="og:title" content="SUTRA — A stone gate for the context window" />
+    <meta
+      property="og:description"
+      content="A stone gate for the context window. Cut tool output before the model reads it. Every removed byte is labelled and retained. 54.3% fewer bytes and 55.2% fewer o200k tokens across eight measured fixtures."
+    />
+    <meta property="og:url" content="https://github.com/g0GobliN/sutra" />
+    <meta property="og:image" content="/assets/og.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="The SUTRA stone arch mark beside the SUTRA wordmark." />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="SUTRA — A stone gate for the context window" />
+    <meta name="twitter:description" content="A stone gate for the context window. Cut tool output before the model reads it. Every removed byte is labelled and retained." />
+    <meta name="twitter:image" content="/assets/og.png" />
+
+    <link rel="icon" href="/assets/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/assets/favicon.png" />
+    <link rel="preload" as="image" href="/assets/sutra-mark.webp" type="image/webp" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin />
+    <link
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="https://cdn.jsdelivr.net/npm/@fontsource-variable/instrument-sans@5/files/instrument-sans-latin-wght-normal.woff2"
+      crossorigin
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <div id="root"></div>
+    <noscript>
+      <main style="max-width: 44rem; margin: 4rem auto; padding: 0 1.5rem; color: #E7E7E7; background: #0D0D0D; font-family: 'IBM Plex Sans', sans-serif; line-height: 1.65">
+        <h1 style="font-family: 'Space Grotesk', sans-serif; font-weight: 500; letter-spacing: 0.02em">SUTRA</h1>
+        <p>SUTRA is a Hermes Agent plugin that cuts tool output before the model reads it, labels every removed byte, and keeps the original in a bounded local store.</p>
+        <p><a href="https://github.com/g0GobliN/sutra" style="color: #E7E7E7">Read the source and installation instructions on GitHub.</a></p>
+      </main>
+    </noscript>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

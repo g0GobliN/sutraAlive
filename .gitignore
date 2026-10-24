@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.vercel/
+.freebuff/
+comparison/
+.DS_Store
+*.local
+npm-debug.log*
