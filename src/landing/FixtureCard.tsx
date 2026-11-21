@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { Fixture } from "../data";
 import { SpecimenFigure } from "../figures/assay/SpecimenFigure";
-import { useInView } from "../iso/react/live";
 import { gsap, reducedMotion } from "../lib/scroll";
 
 const tokenCount = (value: string) => Number(value.replace(/,/g, ""));
@@ -9,8 +8,8 @@ const bytesUnit = (value: string) => value.replace(/^[\d.,\s]+/, "");
 
 export function FixtureCard({ fixture, index }: { fixture: Fixture; index: number }) {
   const [lifted, setLifted] = useState(false);
-  const root = useRef<HTMLLIElement>(null);
-  const inView = useInView(root);
+  const track = useRef<HTMLDivElement>(null);
+  const [trackVisible, setTrackVisible] = useState(false);
   const line = useRef<HTMLElement>(null);
   const percent = useRef<HTMLElement>(null);
   const bytes = useRef<HTMLElement>(null);
@@ -62,22 +61,33 @@ export function FixtureCard({ fixture, index }: { fixture: Fixture; index: numbe
   }, [fixture]);
 
   useEffect(() => {
-    if (inView) play();
-  }, [inView, play]);
+    const node = track.current;
+    if (!node) return;
+    const observer = new IntersectionObserver(
+      ([entry]) => setTrackVisible(entry.isIntersecting && entry.intersectionRatio >= 0.99),
+      { threshold: [0, 1] },
+    );
+    observer.observe(node);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (trackVisible) play();
+  }, [trackVisible, play]);
 
   useEffect(() => {
     if (lifted) play();
   }, [lifted, play]);
 
   return (
-    <li className={`fixture${fixture.zero ? " fixture--zero" : ""}`} ref={root}>
+    <li className={`fixture${fixture.zero ? " fixture--zero" : ""}`}>
       <SpecimenFigure index={index} lifted={lifted} onToggle={() => setLifted((value) => !value)} />
       <div className="fixture__top">
         <code>{fixture.rule}</code>
         <strong ref={percent}>{fixture.saved}</strong>
       </div>
       <h3>{fixture.payload}</h3>
-      <div className="fixture__track" aria-hidden="true">
+      <div className="fixture__track" aria-hidden="true" ref={track}>
         <i ref={line} style={{ width: `${fixture.width}%` }} />
       </div>
       <dl className="fixture__meta">
