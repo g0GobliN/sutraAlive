@@ -1,0 +1,99 @@
+.trimmer {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  outline: none;
+  color: var(--ink);
+  cursor: crosshair;
+}
+
+.trimmer .iso-stage {
+  position: relative;
+  height: 100%;
+  padding: 24px 12px 22px;
+}
+
+.trimmer .iso-svg {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.trimmer__stock .iso-fill,
+.trimmer__sheet .iso-fill {
+  fill: #1e1e1e;
+}
+
+.trimmer__stock .iso-top,
+.trimmer__sheet .iso-top {
+  fill: #222222;
+}
+
+.trimmer__corners {
+  position: absolute;
+  top: 11px;
+  left: 13px;
+  right: 13px;
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  font: 400 8.5px/1.2 var(--mono);
+  letter-spacing: 0.11em;
+  text-transform: uppercase;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+.trimmer__hint,
+.trimmer__readout {
+  position: absolute;
+  bottom: 8px;
+  font: 400 8.5px/1.3 var(--mono);
+  color: var(--muted);
+  letter-spacing: 0.03em;
+  pointer-events: none;
+  max-width: 62%;
+}
+
+.trimmer__hint {
+  left: 13px;
+}
+
+.trimmer__readout {
+  right: 13px;
+  text-align: right;
+  color: var(--ink-2, var(--ink));
+}
+
+.trimmer:focus-visible .iso-stage {
+  outline: 1px solid var(--rule-strong);
+  outline-offset: -3px;
+}
+
+.trimmer:focus-visible {
+  cursor: crosshair;
+}
+
+@media (max-width: 620px) {
+  .trimmer .iso-stage {
+    padding: 22px 6px 24px;
+  }
+
+  .trimmer__corners {
+    top: 9px;
+    left: 10px;
+    right: 10px;
+  }
+
+  .trimmer__hint {
+    display: none;
+  }
+
+  .trimmer__readout {
+    left: 10px;
+    right: 10px;
+    bottom: 7px;
+    max-width: none;
+    text-align: center;
+  }
+}

@@ -1,104 +1,49 @@
 export const GITHUB = "https://github.com/g0GobliN/sutra";
-export const RELEASE = "https://github.com/g0GobliN/sutra/releases/tag/v0.2.0";
-export const DOCS_BENCHMARK = "https://github.com/g0GobliN/sutra/blob/main/docs/benchmark.md";
-export const DOCS_RECOVERY = "https://github.com/g0GobliN/sutra/blob/main/docs/recovery.md";
-export const CONTRIBUTING = "https://github.com/g0GobliN/sutra/blob/main/CONTRIBUTING.md";
-export const SECURITY = "https://github.com/g0GobliN/sutra/blob/main/SECURITY.md";
-export const LICENSE = "https://github.com/g0GobliN/sutra/blob/main/LICENSE";
+export const PYPI = "https://pypi.org/project/sutra-agent/";
+export const RELEASES = `${GITHUB}/releases`;
+export const README = `${GITHUB}#readme`;
 export const HERMES = "https://hermes-agent.nousresearch.com";
 
-export const NAV_LINKS = [
-  { href: "#artifact", label: "Artifact" },
-  { href: "#problem", label: "Problem" },
-  { href: "#passage", label: "Passage" },
-  { href: "#proof", label: "Assay" },
-  { href: "#install", label: "Ritual" },
+export const DOCS_LINKS = {
+  integrations: `${GITHUB}/blob/main/docs/integrations.md`,
+  modes: `${GITHUB}/blob/main/docs/modes.md`,
+  configuration: `${GITHUB}/blob/main/docs/configuration.md`,
+  recovery: `${GITHUB}/blob/main/docs/recovery.md`,
+  troubleshooting: `${GITHUB}/blob/main/docs/troubleshooting.md`,
+  benchmark: `${GITHUB}/blob/main/docs/benchmark.md`,
+  contract: `${GITHUB}/blob/main/docs/contract.md`,
+  security: `${GITHUB}/blob/main/SECURITY.md`,
+  contributing: `${GITHUB}/blob/main/CONTRIBUTING.md`,
+  license: `${GITHUB}/blob/main/LICENSE`,
+};
+
+export type Metric = {
+  value: string;
+  unit: string;
+  label: string;
+  note: string;
+};
+
+export const METRICS: Metric[] = [
+  { value: "54.3", unit: "%", label: "fewer bytes", note: "1.63 MB → 742.7 kB across eight fixtures" },
+  { value: "55.2", unit: "%", label: "fewer o200k tokens", note: "585,977 → 262,517, tokenizer count" },
+  { value: "8", unit: "/8", label: "clues recovered", note: "planted in the omitted middle" },
+  { value: "0", unit: "", label: "diff bytes changed", note: "patches returned byte-identical" },
 ];
 
-export const METRICS = [
-  { value: "54.3", unit: "%", label: "fewer bytes" },
-  { value: "55.2", unit: "%", label: "fewer o200k tokens" },
-  { value: "8", unit: "/8", label: "planted clues recovered" },
-  { value: "0", unit: "", label: "diffs touched" },
-];
+export type Fixture = {
+  payload: string;
+  rule: string;
+  bytesBefore: string;
+  bytesAfter: string;
+  tokensBefore: string;
+  tokensAfter: string;
+  saved: string;
+  width: number;
+  zero?: boolean;
+};
 
-export const STEPS = [
-  {
-    number: "01",
-    title: "The tool runs",
-    body: "SUTRA registers a tool_execution middleware. The tool executes normally; the result is intercepted before the model sees it. No proxy, no wrapper around your agent.",
-    meta: "tool_execution → result",
-  },
-  {
-    number: "02",
-    title: "The rules cut",
-    body: "ANSI escapes are stripped. Identical lines collapse. Plain text keeps its head and tail. JSON string fields are decoded and trimmed. A traceback keeps the error end. A diff is returned byte-identical.",
-    meta: "head + tail · json fields · traceback tail",
-  },
-  {
-    number: "03",
-    title: "The marker speaks",
-    body: "Every removal is named: how many bytes, where they were, which id holds them, how long they are retained, and the exact call to get them back. If nothing was retained, the marker says that too.",
-    meta: "id · offsets · retention · restore call",
-  },
-  {
-    number: "04",
-    title: "The agent asks",
-    body: "sutra_restore returns bytes, lines, a literal search, or the full original. An optional JSON pointer scopes the request to one field. Pages are 8 KiB by default and concatenate byte-exactly.",
-    meta: "bytes · lines · search · full",
-  },
-];
-
-export const RULES = [
-  "ANSI strip",
-  "Repeat collapse",
-  "Head + tail",
-  "JSON fields",
-  "Traceback tail",
-  "Diff protection",
-];
-
-export const FEATURES = [
-  {
-    glyph: "≠",
-    title: "Diffs stay byte-identical.",
-    body: "A rewritten patch can hide a code change. The 600 KB patch fixture saves 0.0% — deliberately. SUTRA recognises diffs and returns them untouched.",
-    meta: "diff-kept · 432.1 kB → 432.1 kB",
-    lead: true,
-  },
-  {
-    glyph: "{ }",
-    title: "JSON keeps its shape.",
-    body: "Arrays stay arrays. Objects keep their keys. Documents are decoded and re-encoded, never cut at a byte offset that lands inside an escape.",
-    meta: "json-fields · 85.9 kB → 19.2 kB",
-  },
-  {
-    glyph: "⌁",
-    title: "The error end survives.",
-    body: "A traceback keeps its tail, where the exception lives. The middle is what gets elided.",
-    meta: "traceback · 359.4 kB → 10.3 kB",
-  },
-  {
-    glyph: "∅",
-    title: "No model in the loop.",
-    body: "No summarising, no rewriting, no invented content. Deterministic rules. Any unexpected shape fails open to the original result.",
-    meta: "0 model calls",
-  },
-  {
-    glyph: "▣",
-    title: "Bounded and local.",
-    body: "Defaults: 128 MiB store, 32 MiB per entry, 2,000 entries, 168 hours. Directory 0700, files 0600, atomic writes, no symlink following. The store is not encrypted.",
-    meta: "local · expiring · bounded",
-  },
-  {
-    glyph: "↩",
-    title: "A receipt, not a summary.",
-    body: "The marker carries an id and the exact restore call, so the model can question the compression instead of trusting it. The original stays on disk until the TTL or quota says otherwise.",
-    meta: "sutra_restore · bytes / lines / search / full",
-  },
-];
-
-export const PROOF_ROWS = [
+export const FIXTURES: Fixture[] = [
   {
     payload: "12,000-line command output",
     rule: "head-tail",
@@ -183,17 +128,259 @@ export const PROOF_ROWS = [
   },
 ];
 
-export const INSTALL_BLOCKS = [
+export type Mode = {
+  id: string;
+  name: string;
+  role: string;
+  body: string;
+  plans: string;
+  passes: string;
+  reuse: string;
+  bound: string;
+};
+
+export const MODES: Mode[] = [
   {
-    label: "Clone",
-    code: "git clone https://github.com/g0GobliN/sutra ~/.hermes/plugins/sutra",
+    id: "off",
+    name: "off",
+    role: "the opt-out",
+    body: "No optimization plans run. Base head/tail compression, retention and recovery stay on.",
+    plans: "none",
+    passes: "0",
+    reuse: "off",
+    bound: "none",
   },
   {
-    label: "Enable",
-    code: "hermes plugins enable sutra\nhermes tools   # enable the SUTRA toolset",
+    id: "balanced",
+    name: "balanced",
+    role: "the default",
+    body: "Formatting and wording plans with safe exact reuse. The mode an installation gets when it sets nothing.",
+    plans: "formatting + caveman",
+    passes: "2",
+    reuse: "safe only",
+    bound: "50 ms nominal",
   },
   {
-    label: "Verify",
-    code: "hermes plugins show sutra\nhermes plugins validate ~/.hermes/plugins/sutra",
+    id: "aggressive",
+    name: "aggressive",
+    role: "the explorer",
+    body: "More passes and ordered pairs, with reuse that must be revalidated before it is served.",
+    plans: "balanced + pairs",
+    passes: "4",
+    reuse: "revalidate",
+    bound: "150 ms nominal",
   },
+  {
+    id: "beast",
+    name: "beast",
+    role: "the largest bound",
+    body: "The widest bounded search, including triple combinations. Still only validated, smaller candidates win.",
+    plans: "balanced + triples",
+    passes: "8",
+    reuse: "revalidate",
+    bound: "400 ms nominal",
+  },
+];
+
+export type Client = {
+  id: string;
+  name: string;
+  tier: string;
+  automatic: boolean;
+  mechanism: string;
+  install: string;
+  restart: string;
+  verify: string;
+  limit: string;
+  docs: string;
+};
+
+export const CLIENTS: Client[] = [
+  {
+    id: "hermes",
+    name: "Hermes Agent",
+    tier: "automatic",
+    automatic: true,
+    mechanism: "native tool_execution middleware",
+    install: "sutra install --client hermes",
+    restart: "restart the Hermes gateway",
+    verify: "sutra doctor",
+    limit: "Verified against Hermes v0.22.2+3030.g4d04303. Enable the sutra toolset for recovery.",
+    docs: "/docs#hermes",
+  },
+  {
+    id: "claude-code",
+    name: "Claude Code",
+    tier: "automatic",
+    automatic: true,
+    mechanism: "PostToolUse hook + MCP recovery",
+    install: "sutra install --client claude",
+    restart: "start a new Claude Code session",
+    verify: "sutra doctor",
+    limit: "Hook and MCP must share a store. The 30,000-character inline preview is never compressed.",
+    docs: "/docs#claude-code",
+  },
+  {
+    id: "opencode",
+    name: "OpenCode",
+    tier: "automatic",
+    automatic: true,
+    mechanism: "tool.execute.after plugin + built-in restore",
+    install: "sutra install --client opencode",
+    restart: "restart OpenCode",
+    verify: "sutra doctor",
+    limit: "One short-lived process per oversized result, 2.5 s timeout, fail-open.",
+    docs: "/docs#opencode",
+  },
+  {
+    id: "openclaw",
+    name: "OpenClaw",
+    tier: "automatic",
+    automatic: true,
+    mechanism: "generated tool.execute.after plugin + MCP",
+    install: "sutra install --client openclaw",
+    restart: "restart OpenClaw",
+    verify: "sutra doctor",
+    limit: "Verified on OpenClaw 0.1.0. Config directory overridable with SUTRA_OPENCLAW_CONFIG.",
+    docs: "/docs#openclaw",
+  },
+  {
+    id: "codex",
+    name: "Codex CLI",
+    tier: "after /hooks trust",
+    automatic: true,
+    mechanism: "PostToolUse feedback hook + MCP",
+    install: "sutra install --client codex",
+    restart: "new session, then run /hooks once",
+    verify: "sutra doctor --client codex",
+    limit: "Codex truncates very large output before the hook; only the supplied text is compressible.",
+    docs: "/docs#codex",
+  },
+  {
+    id: "mcp",
+    name: "Other MCP clients",
+    tier: "explicit",
+    automatic: false,
+    mechanism: "MCP server: sutra_compress + sutra_restore",
+    install: "python -m sutra.mcp",
+    restart: "reload the client's MCP servers",
+    verify: "tools/list, then sutra_compress",
+    limit: "Registration is not interception. Cursor and Windsurf cannot replace built-in tool output.",
+    docs: "/docs#mcp",
+  },
+];
+
+export type Step = {
+  number: string;
+  title: string;
+  body: string;
+  meta: string;
+};
+
+export const STEPS: Step[] = [
+  {
+    number: "01",
+    title: "The host runs the tool",
+    body: "SUTRA does not wrap, delay or re-run the command. The adapter hands the finished result to the shared core.",
+    meta: "tool output → core.process_result",
+  },
+  {
+    number: "02",
+    title: "The core checks eligibility",
+    body: "Size, payload shape, tool type and protection rules decide whether the result is touched at all.",
+    meta: "size · shape · tool · protection",
+  },
+  {
+    number: "03",
+    title: "Candidates must survive",
+    body: "Every rewrite is validated against paths, URLs, numbers, identifiers, commands, negations and error terms. A candidate must be smaller and preservation-clean.",
+    meta: "preserve.preservation_ok",
+  },
+  {
+    number: "04",
+    title: "The original is filed",
+    body: "An id is written only after the original is on disk. The model sees a smaller result and a marker naming what left and how to get it back.",
+    meta: "store → marker → sutra_restore",
+  },
+];
+
+export const QUICKSTART: { label: string; code: string; note: string }[] = [
+  {
+    label: "install",
+    code: "python -m pip install sutra-agent",
+    note: "Python 3.11 or newer.",
+  },
+  {
+    label: "choose effort",
+    code: "sutra mode balanced",
+    note: "balanced is the default. Modes ship on main ahead of the next PyPI release.",
+  },
+  {
+    label: "look around",
+    code: "sutra detect",
+    note: "Read-only. Reports clients, mechanisms and capability tiers.",
+  },
+  {
+    label: "preview, then install",
+    code: "sutra install --dry-run\nsutra install",
+    note: "Backs up every file it edits. Auto-detects supported clients.",
+  },
+  {
+    label: "prove the path",
+    code: "sutra doctor",
+    note: "Executes each installed path, including host limits.",
+  },
+];
+
+export type ConfigRow = { name: string; value: string; meaning: string };
+
+export const CONFIG_ROWS: ConfigRow[] = [
+  { name: "SUTRA_MODE", value: "balanced", meaning: "off · balanced · aggressive · beast" },
+  { name: "SUTRA_ENABLED", value: "1", meaning: "0 disables compression and retention" },
+  { name: "SUTRA_MAX_BYTES", value: "24576", meaning: "results at or below this size are untouched" },
+  { name: "SUTRA_HEAD_BYTES", value: "12288", meaning: "bytes kept from the start" },
+  { name: "SUTRA_TAIL_BYTES", value: "6144", meaning: "bytes kept from the end" },
+  { name: "SUTRA_STORE", value: "1", meaning: "0 stops retaining originals" },
+  { name: "SUTRA_STORE_DIR", value: "$HERMES_HOME/cache/sutra-store", meaning: "where originals are retained" },
+  { name: "SUTRA_STORE_TTL_HOURS", value: "168", meaning: "retention lifetime (7 days)" },
+  { name: "SUTRA_STORE_MAX_BYTES", value: "134217728", meaning: "128 MiB total store" },
+  { name: "SUTRA_STORE_MAX_ENTRY_BYTES", value: "33554432", meaning: "32 MiB per retained original" },
+  { name: "SUTRA_STORE_MAX_ENTRIES", value: "2000", meaning: "most originals retained" },
+  { name: "SUTRA_RECOVERY_MAX_BYTES", value: "8192", meaning: "default response cap; 64 KiB hard maximum" },
+  { name: "SUTRA_RECOVERY_MAX_MATCHES", value: "5", meaning: "default search matches; 20 hard maximum" },
+  { name: "SUTRA_REUSE", value: "1", meaning: "replace an exact repeat with a marker quoting the earlier id" },
+  { name: "SUTRA_REPLAY", value: "1", meaning: "pre-dispatch reuse, Hermes only" },
+  { name: "SUTRA_PROMPT", value: "0", meaning: "trim older recoverable results, Hermes only" },
+  { name: "SUTRA_POLICY", value: "off", meaning: "optional Hermes session guidance" },
+  { name: "SUTRA_TELEMETRY", value: "0", meaning: "opt-in OpenTelemetry export" },
+];
+
+export const RECORDED = {
+  fixture: "deploy.log",
+  tool: "terminal",
+  originalBytes: 32084,
+  visibleBytes: 18607,
+  elidedBytes: 13716,
+  id: "su_c9bb4087c079f4427bc570c506050dfa",
+  start: 12288,
+  end: 26004,
+  retentionHours: 168,
+  marker:
+    '[sutra: partial · 13,716 bytes elided (large output) · id=su_c9bb4087c079f4427bc570c506050dfa · original 32,084 B retained 168h · retrieve: sutra_restore(id="su_c9bb4087c079f4427bc570c506050dfa", mode="bytes", start=12288, end=26004)]',
+};
+
+export const TOTALS = {
+  bytesBefore: "1.63 MB",
+  bytesAfter: "742.7 kB",
+  tokensBefore: "585,977",
+  tokensAfter: "262,517",
+};
+
+export const NAV_LINKS = [
+  { href: "#cost", label: "cost" },
+  { href: "#passage", label: "passage" },
+  { href: "#modes", label: "modes" },
+  { href: "#proof", label: "proof" },
+  { href: "#clients", label: "clients" },
+  { href: "#install", label: "install" },
 ];

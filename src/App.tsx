@@ -1,153 +1,61 @@
-import gsap from "gsap";
-import { ScrollTrigger } from "gsap/ScrollTrigger";
-import { useLayoutEffect } from "react";
-import { Artifact } from "./components/Artifact";
-import { Header } from "./components/Header";
-import { Hero } from "./components/Hero";
-import {
-  Canon,
-  Closing,
-  Footer,
-  Passage,
-  Problem,
-  Proof,
-  Ritual,
-} from "./components/Sections";
+import { useEffect } from "react";
+import { Docs } from "./docs/Docs";
+import { LegalPage, type LegalKind } from "./legal/LegalPage";
+import { Landing } from "./landing/Landing";
+import { refreshScroll } from "./lib/scroll";
 
-gsap.registerPlugin(ScrollTrigger);
+const LEGAL_PAGES: Record<string, LegalKind> = {
+  "/privacy": "privacy",
+  "/terms": "terms",
+  "/contact": "contact",
+};
 
-const REDUCED = "(prefers-reduced-motion: reduce)";
+const currentPath = () => {
+  const path = window.location.pathname.replace(/\/+$/, "");
+  return path === "" ? "/" : path;
+};
 
-function useChoreography() {
-  useLayoutEffect(() => {
-    const media = window.matchMedia(REDUCED);
-    const context = gsap.context(() => {
-      if (media.matches) {
-        gsap.set(".reveal", { clearProps: "all" });
-        gsap.set(".diagram__signal", { strokeDashoffset: 0 });
-        return;
-      }
+const isDocsPath = () => /^\/docs(?:\/.*)?$/.test(currentPath());
 
-      gsap.from(".hero__meta", {
-        opacity: 0,
-        duration: 1,
-        ease: "power2.out",
-      });
+const TITLES = {
+  site: "SUTRA — Less output. More signal.",
+  docs: "Documentation — SUTRA",
+  privacy: "Privacy — SUTRA",
+  terms: "Terms of use — SUTRA",
+  contact: "Contact — SUTRA",
+};
 
-      gsap.from(".hero__line", {
-        y: 34,
-        opacity: 0,
-        duration: 1.1,
-        stagger: 0.1,
-        ease: "power3.out",
-        delay: 0.18,
-      });
-
-      gsap.from(".hero__lede", {
-        y: 18,
-        opacity: 0,
-        duration: 1,
-        ease: "power3.out",
-        delay: 0.55,
-      });
-
-      gsap.from(".hero__actions", {
-        y: 14,
-        opacity: 0,
-        duration: 0.8,
-        ease: "power3.out",
-        delay: 0.7,
-      });
-
-      gsap.fromTo(
-        ".hero__beam",
-        { scaleX: 0 },
-        { scaleX: 1, transformOrigin: "left center", duration: 1.8, ease: "power3.inOut", delay: 0.3 },
-      );
-
-      ScrollTrigger.batch(".reveal", {
-        start: "top 88%",
-        once: true,
-        onEnter: (batch) =>
-          gsap.fromTo(
-            batch,
-            { y: 26, opacity: 0 },
-            { y: 0, opacity: 1, duration: 0.9, stagger: 0.08, ease: "power3.out", overwrite: true },
-          ),
-      });
-
-      const diagram = gsap.timeline({
-        scrollTrigger: {
-          trigger: ".diagram",
-          start: "top 82%",
-          end: "bottom 58%",
-          scrub: 0.6,
-        },
-      });
-
-      diagram
-        .from(".diagram__fragments", { opacity: 0, duration: 0.35 })
-        .fromTo(
-          ".diagram__signal",
-          { strokeDashoffset: 1 },
-          { strokeDashoffset: 0, duration: 0.6, stagger: 0.15, ease: "none" },
-        )
-        .from(
-          ".diagram__node, .diagram__output, .diagram__tag",
-          { opacity: 0, scale: 0.94, transformOrigin: "center", duration: 0.35 },
-          "-=0.2",
-        );
-
-      gsap.from(".observation__figure", {
-        opacity: 0,
-        y: 18,
-        duration: 1,
-        ease: "power3.out",
-        scrollTrigger: { trigger: ".observation", start: "top 84%", once: true },
-      });
-
-      gsap.from(".assay__track i", {
-        scaleX: 0,
-        transformOrigin: "left center",
-        duration: 1.1,
-        stagger: 0.05,
-        ease: "power2.out",
-        scrollTrigger: {
-          trigger: ".assay",
-          start: "top 82%",
-          once: true,
-        },
-      });
-    });
-
-    const refresh = () => ScrollTrigger.refresh();
-    if (document.fonts?.ready) document.fonts.ready.then(refresh).catch(() => undefined);
-
-    return () => context.revert();
-  }, []);
-}
+const DESCRIPTIONS = {
+  site: "SUTRA is a deterministic optimization layer for AI coding agents. Cut oversized tool output, reuse exact repeats, and keep every omitted byte restorable — with no summarizer in the loop.",
+  docs: "Install and operate SUTRA: Hermes Agent, Claude Code, OpenCode, OpenClaw, Codex CLI, MCP clients and the CLI. Mechanisms, commands, limits and recovery.",
+  privacy:
+    "How SUTRA handles data: a static site without analytics, local-only processing in the package, and contact details for privacy questions.",
+  terms:
+    "Terms for the SUTRA website and the open-source package, including the MIT license, benchmark limits and acceptable use.",
+  contact: "Contact SUTRA by email, Instagram or GitHub for support, licensing, commercial use and security reports.",
+};
 
 export function App() {
-  useChoreography();
+  const docs = isDocsPath();
+  const legal = LEGAL_PAGES[currentPath()] ?? null;
 
-  return (
-    <div className="page">
-      <a className="skip-link" href="#main">
-        Skip to content
-      </a>
-      <div className="grain" aria-hidden="true" />
-      <Header />
-      <main id="main">
-        <Hero />
-        <Artifact />
-        <Problem />
-        <Passage />
-        <Canon />
-        <Proof />
-        <Ritual />
-        <Closing />
-      </main>
-      <Footer />
-    </div>
-  );
+  useEffect(() => {
+    document.title = legal ? TITLES[legal] : docs ? TITLES.docs : TITLES.site;
+    const description = legal ? DESCRIPTIONS[legal] : docs ? DESCRIPTIONS.docs : DESCRIPTIONS.site;
+    const meta = document.querySelector('meta[name="description"]');
+    if (meta) meta.setAttribute("content", description);
+    document.documentElement.dataset.page = legal ? "legal" : docs ? "docs" : "site";
+    if (!window.location.hash) {
+      const root = document.documentElement;
+      const previous = root.style.scrollBehavior;
+      root.style.scrollBehavior = "auto";
+      window.scrollTo(0, 0);
+      root.style.scrollBehavior = previous;
+    }
+    const timer = window.setTimeout(refreshScroll, 320);
+    return () => window.clearTimeout(timer);
+  }, [docs, legal]);
+
+  if (legal) return <LegalPage page={legal} />;
+  return docs ? <Docs /> : <Landing />;
 }
