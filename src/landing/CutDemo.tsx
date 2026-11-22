@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from "react";
 import { RECORDED } from "../data";
-import { gsap } from "../lib/scroll";
+import { gsap, ScrollTrigger } from "../lib/scroll";
 
 const HEAD = [
   "2026-11-20T09:00:01Z INFO  deploy step 0001: worker heartbeat ok",
@@ -56,6 +56,32 @@ export function CutDemo() {
             0.55,
           )
           .fromTo(".cut__receipt", { opacity: 0 }, { opacity: 1, duration: 0.25 }, 0.7);
+      }, section);
+
+      return () => context.revert();
+    });
+
+    mm.add("(max-width: 899px) and (prefers-reduced-motion: no-preference)", () => {
+      const context = gsap.context(() => {
+        const timeline = gsap
+          .timeline({ paused: true })
+          .to(".cut__noise", { height: 0, opacity: 0, duration: 0.7, ease: "none" }, 0)
+          .to(".cut__slice", { opacity: 1, duration: 0.3 }, 0)
+          .fromTo(
+            ".cut__marker",
+            { opacity: 0, y: 18 },
+            { opacity: 1, y: 0, duration: 0.45, ease: "power2.out" },
+            0.2,
+          )
+          .fromTo(".cut__receipt", { opacity: 0 }, { opacity: 1, duration: 0.3 }, 0.45);
+
+        ScrollTrigger.create({
+          trigger: ".cut__frame",
+          start: "top 82%",
+          onEnter: () => timeline.restart(),
+          onEnterBack: () => timeline.restart(),
+          onLeaveBack: () => timeline.pause(0),
+        });
       }, section);
 
       return () => context.revert();

@@ -1,5 +1,7 @@
+import { useLayoutEffect, useRef } from "react";
 import { DOCS_LINKS } from "../data";
 import { ScrambleText } from "../components/ScrambleText";
+import { gsap, reducedMotion } from "../lib/scroll";
 
 const CARDS = [
   {
@@ -29,8 +31,34 @@ const CARDS = [
 ];
 
 export function Cost() {
+  const root = useRef<HTMLElement>(null);
+
+  useLayoutEffect(() => {
+    if (reducedMotion()) return;
+    const context = gsap.context(() => {
+      gsap.fromTo(
+        ".cost-card__track i",
+        { scaleX: 0 },
+        {
+          scaleX: 1,
+          transformOrigin: "left center",
+          duration: 1.1,
+          stagger: 0.12,
+          ease: "power3.out",
+          scrollTrigger: {
+            trigger: ".cost__cards",
+            start: "top 82%",
+            toggleActions: "restart none restart none",
+          },
+        },
+      );
+    }, root);
+
+    return () => context.revert();
+  }, []);
+
   return (
-    <section className="section cost" id="cost" aria-labelledby="cost-title">
+    <section className="section cost" id="cost" ref={root} aria-labelledby="cost-title">
       <div className="wrap cost__grid">
         <div className="cost__sticky">
           <p className="kicker">the cost</p>

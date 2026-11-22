@@ -100,6 +100,19 @@ export function TrimmerFigure() {
   }, [put, say, still]);
 
   React.useEffect(() => {
+    if (still) return;
+    if (!inView) {
+      idle.current = 0;
+      cycle.current.t = -1;
+      snapped.current = false;
+      return;
+    }
+    // Start the cut on arrival instead of waiting for a press. A short idle
+    // beat lets the section settle before the blade moves.
+    if (cycle.current.t < 0) idle.current = 6.7;
+  }, [inView, still]);
+
+  React.useEffect(() => {
     windowRef.current = window;
     if (snapped.current && still) {
       put(head.current, window / 2, 0, 1);

@@ -13,22 +13,22 @@ export function Closing() {
 
     const context = gsap.context(() => {
       const timeline = gsap
-        .timeline({ paused: true, defaults: { ease: "power3.out" } })
+        .timeline({ paused: true, defaults: { ease: "power2.out" } })
         .from(".closing__mark img", {
           clipPath: "inset(0 100% 0 0)",
           opacity: 0,
-          duration: 0.9,
+          duration: 0.65,
           ease: "power2.inOut",
         })
-        .from(".closing__kicker", { y: 16, opacity: 0, duration: 0.55 }, "-=0.3")
-        .from(".closing h2", { y: 42, opacity: 0, duration: 0.95 }, "-=0.3")
-        .from(".closing__lede", { y: 22, opacity: 0, duration: 0.8 }, "-=0.62")
+        .from(".closing__kicker", { y: 10, opacity: 0, duration: 0.3 }, 0)
+        .from(".closing h2", { y: 26, opacity: 0, duration: 0.5 }, 0.04)
+        .from(".closing__lede", { y: 14, opacity: 0, duration: 0.4 }, 0.16)
         .from(
           ".closing__actions > *",
-          { y: 16, opacity: 0, duration: 0.6, stagger: 0.07 },
-          "-=0.52",
+          { y: 10, opacity: 0, duration: 0.35, stagger: 0.04 },
+          0.24,
         )
-        .from(".closing__sig", { opacity: 0, duration: 0.6 }, "-=0.4");
+        .from(".closing__sig", { opacity: 0, duration: 0.3 }, 0.38);
 
       // IntersectionObserver fires on observe when the section is already in
       // view, so a restored scroll position plays the reveal too.
@@ -38,7 +38,7 @@ export function Closing() {
           timeline.play();
           observer?.disconnect();
         },
-        { threshold: 0.25 },
+        { threshold: 0.1 },
       );
       observer.observe(section);
 

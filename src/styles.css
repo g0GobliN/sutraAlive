@@ -1117,7 +1117,9 @@ h2 {
 .cost-card__track i {
   display: block;
   height: 100%;
-  background: var(--paper-2);
+  background: var(--ink-2);
+  transform-origin: left center;
+  will-change: transform;
 }
 
 .cost-card:nth-child(3) .cost-card__track i {
@@ -3188,6 +3190,7 @@ h2 {
   }
 
   .cut__pin {
+    height: auto;
     min-height: 0;
   }
 
@@ -3196,16 +3199,7 @@ h2 {
   }
 
   .cut__noise {
-    display: none;
-  }
-
-  .cut__marker {
-    opacity: 1 !important;
-    transform: none !important;
-  }
-
-  .cut__receipt {
-    opacity: 1 !important;
+    height: 6.5em;
   }
 
   .cost__grid {
@@ -3380,7 +3374,6 @@ h2 {
   }
 
   .passage__steps,
-  .fixtures,
   .doc-facts {
     grid-template-columns: minmax(0, 1fr);
   }
@@ -3404,8 +3397,69 @@ h2 {
     border-bottom: 0;
   }
 
+  .fixtures {
+    gap: 10px;
+  }
+
   .fixture {
     min-height: 0;
+    padding: 12px;
+  }
+
+  .specimen {
+    width: calc(100% + 24px);
+    height: 92px;
+    margin: -12px -12px 10px;
+  }
+
+  .specimen__num {
+    top: 6px;
+    left: 8px;
+    font-size: 7.5px;
+  }
+
+  .fixture__top {
+    flex-wrap: wrap;
+    gap: 2px 8px;
+  }
+
+  .fixture__top code {
+    font-size: 8px;
+  }
+
+  .fixture__top strong {
+    margin-left: auto;
+    font-size: 10.5px;
+  }
+
+  .fixture h3 {
+    margin-top: 10px;
+    font-size: 0.82rem;
+    line-height: 1.2;
+  }
+
+  .fixture__track {
+    margin-top: 10px;
+    height: 3px;
+  }
+
+  .fixture__meta {
+    padding-top: 10px;
+    gap: 4px;
+  }
+
+  .fixture__meta > div {
+    display: block;
+  }
+
+  .fixture__meta dt {
+    font-size: 8px;
+  }
+
+  .fixture__meta dd {
+    margin-top: 1px;
+    font-size: 8.5px;
+    text-align: left;
   }
 
   .focus__body {
