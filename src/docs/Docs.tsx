@@ -31,6 +31,7 @@ const NAV = [
       { id: "opencode", label: "OpenCode" },
       { id: "openclaw", label: "OpenClaw" },
       { id: "codex", label: "Codex CLI" },
+      { id: "deepseek", label: "DeepSeek Harness" },
       { id: "mcp", label: "MCP clients" },
       { id: "cli", label: "CLI" },
     ],
@@ -38,6 +39,7 @@ const NAV = [
   {
     group: "operate",
     items: [
+      { id: "request", label: "request stage & proxy" },
       { id: "verify", label: "verify & diagnose" },
       { id: "configuration", label: "configuration" },
       { id: "recovery", label: "recovery" },
@@ -257,8 +259,9 @@ export function Docs() {
             <p className="doc-lead">
               SUTRA is a deterministic optimization layer for AI coding agents. One shared core
               decides eligibility, validates every rewrite, retains the original and hands the model
-              a smaller result with a recovery marker. Host adapters only translate each client's
-              tool result into that core.
+              a smaller result with a recovery marker. Host adapters translate each client's tool
+              result into that core, and an optional request stage shortens older recoverable
+              results in the outbound request where the host exposes that boundary.
             </p>
             <p>
               It never asks a model to summarize a tool result. There is no second model in the loop,
@@ -289,6 +292,7 @@ export function Docs() {
             <ul className="doc-list">
               <li>Reduces oversized tool results to a head and tail with a marker naming the omitted range.</li>
               <li>Reuses an exact repeat as a reference to the earlier id instead of re-sending it.</li>
+              <li>Shortens older recoverable tool results in the outbound request when a host exposes a request boundary, opt-in.</li>
               <li>Runs bounded formatting and wording plans selected by one mode: off, balanced, aggressive or beast.</li>
               <li>Validates every candidate against protected spans and requires it to be strictly smaller.</li>
               <li>Keeps the original recoverable through <code>sutra_restore</code> when local storage is enabled.</li>
@@ -301,17 +305,22 @@ export function Docs() {
               <li>Structured JSON is never byte-sliced; a re-encoded document must remain valid and keep its shape.</li>
               <li>Paths, URLs, commands, identifiers, numbers, negations, error terms and security terms must survive.</li>
               <li>An id is emitted only after the original is actually stored.</li>
+              <li>A shortened preview keeps the traceback frame that occurs nowhere else, paid for out of the head's own byte budget.</li>
             </ul>
 
             <Note title="Version note">
-              This page documents <code>main</code>. PyPI carries <Version />; the
-              four-mode switch is on <code>main</code> and ships in the next release. Existing{" "}
-              <code>SUTRA_SEARCH</code> and <code>SUTRA_LANGUAGE</code> settings remain supported on
-              released versions.
+              This page documents <code>main</code>. PyPI carries <Version />. The four-mode switch,
+              the request-stage proxy and the DeepSeek harness bundle are on <code>main</code> ahead
+              of the next release; <code>sutra install --client dsh</code> is not in the released
+              package yet. Existing <code>SUTRA_SEARCH</code> and <code>SUTRA_LANGUAGE</code>{" "}
+              settings remain supported.
             </Note>
 
             <p className="doc-links">
               <a href={DOCS_LINKS.contract} target="_blank" rel="noopener noreferrer">contract</a>
+              <a href={DOCS_LINKS.optimization} target="_blank" rel="noopener noreferrer">optimization model</a>
+              <a href={DOCS_LINKS.universal} target="_blank" rel="noopener noreferrer">host audit</a>
+              <a href={DOCS_LINKS.proxy} target="_blank" rel="noopener noreferrer">request-stage proxy</a>
               <a href={DOCS_LINKS.security} target="_blank" rel="noopener noreferrer">security model</a>
               <a href={DOCS_LINKS.benchmark} target="_blank" rel="noopener noreferrer">benchmark method</a>
             </p>
@@ -392,7 +401,8 @@ export function Docs() {
             <p>
               Automatic means the host replaces the tool result before the model reads it. Manual
               means the agent must call <code>sutra_compress</code> explicitly; the original has
-              already reached the model.
+              already reached the model. DeepSeek Harness is automatic once its bundle loads: the
+              post-execute seam replaces only the text blocks that changed.
             </p>
             <Table
               head={["surface", "mechanism", "automatic", "install"]}
@@ -439,6 +449,12 @@ export function Docs() {
               validates it, and enables it.
             </p>
             <CodeBlock label="hermes" code={"sutra install --client hermes\nsutra doctor"} />
+            <p>
+              The same plugin declares the <code>llm_request</code> stage. Set{" "}
+              <code>SUTRA_PROMPT=1</code> in the gateway process to trim older recoverable tool
+              results before submission; a copy that predates the stage reports{" "}
+              <code>copy=stale</code> until it is reinstalled and the gateway restarts.
+            </p>
             <Table
               head={["step", "what happens"]}
               rows={[
@@ -481,12 +497,14 @@ export function Docs() {
               <li>One user-scope MCP entry for <code>python -m sutra.mcp</code>.</li>
               <li>Timestamped backups, atomic writes, and a no-op on a second install.</li>
               <li>A different existing <code>sutra</code> MCP entry is refused, not overwritten.</li>
+              <li>A <code>Read</code> result is trimmed in place inside its <code>file.content</code> slot; the rest of the tool response keeps its shape.</li>
             </ul>
             <Note tone="warn" title="The 30,000-character host limit">
               Claude Code persists large Bash and PowerShell results and gives the hook a preview
               plus <code>persistedOutputPath</code>. SUTRA reads the full file only after path, size,
               type, symlink and session-tree checks pass. If any check fails, the result is left
-              untouched — it never stores a compressed preview as the "original".
+              untouched — it never stores a compressed preview as the "original". A recorded host
+              check on 2.1.268 trimmed 70,888 B to 18,645 B and restored the clue through MCP.
             </Note>
             <h3>Shared store requirement</h3>
             <p>
@@ -527,6 +545,7 @@ export function Docs() {
               <li>The interpreter and a dedicated store home are baked into the generated file.</li>
               <li>If OpenCode's config exists, the installer also adds the MCP recovery entry; the plugin has its own restore tool either way.</li>
               <li>A foreign <code>sutra.js</code> is refused; a changed interpreter rewrites with a timestamped backup.</li>
+              <li>At 1.19.6 the plugin also shortens older tool results through <code>experimental.chat.messages.transform</code>; set <code>SUTRA_PROMPT=1</code> to opt in.</li>
             </ul>
             <Note tone="warn" title="Host limit">
               Verified on OpenCode 1.19.5. Each oversized result has a 2.5-second subprocess timeout
@@ -583,7 +602,33 @@ export function Docs() {
             </Note>
           </Section>
 
-          <Section id="mcp" kicker="install 06" title="Other MCP clients">
+          <Section id="deepseek" kicker="install 06" title="DeepSeek Harness">
+            <p>
+              The harness has no settings file a third party may edit. A capability arrives as a
+              bundle, and the supported route is the harness's own plugin command. One install
+              writes the bundle and attaches it to the profile:
+            </p>
+            <CodeBlock
+              label="deepseek harness"
+              code={"sutra install --client dsh\nsutra doctor --client dsh\n# restart the harness"}
+              note="Writes $DSH_HOME/sutra-host (default ~/.dsh), then runs dsh plugin --profile desktop add. Set DSH_PROFILE to attach another profile. sutra install also detects dsh when its binary is on PATH. Available from a main checkout until the next release."
+            />
+            <h3>What the bundle wires</h3>
+            <ul className="doc-list">
+              <li><code>tools/post-execute</code> hands the result's text blocks to <code>python -m sutra process-result</code> and replaces only the blocks that changed.</li>
+              <li><code>mcpManager.register</code> exposes the recovery server, so a marker's id exchanges for the retained bytes.</li>
+              <li>Both stages are live after a harness restart; a loaded bundle logs <code>sutra: host bundle loaded</code>.</li>
+            </ul>
+            <Note tone="warn" title="Host limits">
+              The bundle needs a Python that can import SUTRA. One short-lived process runs per
+              oversized result with a 4-second timeout, and every failure returns the result
+              unchanged. The harness exposes no request-stage hook; point a provider's{" "}
+              <code>baseURL</code> at <a href="#request">sutra proxy</a> if you need one. The recorded
+              tool-stage check trimmed 53,890 B to 18,340 B with a restore id.
+            </Note>
+          </Section>
+
+          <Section id="mcp" kicker="install 07" title="Other MCP clients">
             <p>
               The package ships the same server as <code>sutra-mcp</code> and{" "}
               <code>python -m sutra.mcp</code>. It exposes <code>sutra_compress</code> and{" "}
@@ -611,7 +656,7 @@ export function Docs() {
             </Note>
           </Section>
 
-          <Section id="cli" kicker="install 07" title="CLI">
+          <Section id="cli" kicker="install 08" title="CLI">
             <p>
               The CLI is a subprocess filter: it compresses a stream or a file, not an agent's tool
               result in place. It emits one JSON object on stdout and uses exit codes{" "}
@@ -624,10 +669,77 @@ export function Docs() {
               note="Checkout alternative: python3 scripts/sutra-cli.py <command>. Search is case-sensitive by default; --ignore-case opts out."
             />
             <ul className="doc-list">
+              <li><code>sutra process-result</code> reads a JSON object with a <code>texts</code> array plus an optional <code>tool_name</code> and <code>session_id</code>, and writes the same shape with the entries that changed; it is the seam the DeepSeek bundle calls.</li>
               <li>Stdin is capped at 64 MiB and must be valid UTF-8; invalid bytes are rejected, never replaced with U+FFFD.</li>
               <li>A larger <code>--file</code> is read and returned unchanged with exit 0.</li>
               <li>One process per invocation; there is no daemon.</li>
             </ul>
+          </Section>
+
+          <Section id="request" kicker="operate" title="Request stage and the proxy">
+            <p>
+              The tool stage replaces a result after a tool returns. The request stage runs on the
+              assembled request before it is sent, shortening older tool results that already have a
+              recoverable original. It is opt-in and refuses anything it cannot keep restorable.
+            </p>
+            <Table
+              head={["host", "boundary", "status"]}
+              rows={[
+                [
+                  "Hermes Agent",
+                  <code key="request-hermes">llm_request</code>,
+                  "implemented; opt-in with SUTRA_PROMPT=1",
+                ],
+                [
+                  "OpenCode 1.19.6",
+                  <code key="request-opencode">experimental.chat.messages.transform</code>,
+                  "implemented; opt-in",
+                ],
+                [
+                  "Claude Code",
+                  "no request hook; point ANTHROPIC_BASE_URL at sutra proxy",
+                  "proxy implemented; live client not verified",
+                ],
+                [
+                  "DeepSeek Harness",
+                  "no request hook; point a provider baseURL at sutra proxy",
+                  "proxy fallback",
+                ],
+                ["Codex CLI / OpenClaw", "none", "not implemented"],
+              ]}
+            />
+            <p>
+              Enable the in-host stage with <code>SUTRA_PROMPT=1</code> in the host's environment;{" "}
+              <code>off</code> mode always disables it. The proxy is opt-in by running it. Only older
+              tool results are touched. In an assembled request
+              the newest six messages stay whole, system, user and assistant text are never read for
+              trimming, and the stored conversation is never modified. A result the host produced is
+              written to the store first; if the store declines — disabled, full or too large — it
+              goes out byte-identical. A repeated payload becomes a pointer to the first copy's id.
+              A later message that cites a result's id, or names a distinctive token inside it,
+              makes that result mandatory.
+            </p>
+            <CodeBlock
+              label="request-stage proxy"
+              code={"sutra proxy --port 8787 \\\n  --upstream https://api.anthropic.com\nANTHROPIC_BASE_URL=http://127.0.0.1:8787 claude\n\n# OpenAI-shaped hosts: DeepSeek, Codex\nsutra proxy --port 8787 \\\n  --upstream https://api.commandcode.ai"}
+              note="Binds 127.0.0.1 only. Only a POST whose path ends in /v1/messages or /chat/completions is read; other methods and paths are forwarded unchanged. Credential headers are never read, logged or rewritten."
+            />
+            <p>
+              The proxy also reads the provider's usage fields and records them through{" "}
+              <code>metrics.record_provider_usage()</code>. It never sets a cache flag or moves a
+              cache breakpoint. See the{" "}
+              <a href={DOCS_LINKS.accounting} target="_blank" rel="noopener noreferrer">accounting model</a>.
+            </p>
+            <Note tone="warn" title="A rewrite can move the cached prefix">
+              A 2×2 <code>trace-deep</code> trial removed about 63 KB per session and still billed
+              50–52% more prompt tokens, because each rewrite moves the cached prefix and a restore
+              can add a turn. <code>SUTRA_PROMPT_MIN_SAVING_PERCENT=25</code> refuses trims that do
+              not pay for that move. The proxy is covered by socket tests, not a live model pair.
+            </Note>
+            <p className="doc-links">
+              <a href={DOCS_LINKS.proxy} target="_blank" rel="noopener noreferrer">proxy reference</a>
+              <a href={DOCS_LINKS.abBenchmark} target="_blank" rel="noopener noreferrer">request-stage cost trial</a>
+            </p>
           </Section>
 
           <Section id="verify" kicker="operate" title="Verify and diagnose">
@@ -638,7 +750,7 @@ export function Docs() {
             </p>
             <CodeBlock
               label="diagnose"
-              code={"sutra detect\nsutra detect --json\nsutra detect --client opencode\nsutra status\nsutra doctor\nsutra doctor --client codex\nsutra doctor --json"}
+              code={"sutra detect\nsutra detect --json\nsutra detect --client opencode\nsutra status\nsutra stats\nsutra doctor\nsutra doctor --client codex\nsutra doctor --client dsh\nsutra doctor --json"}
             />
             <Table
               head={["result", "meaning"]}
@@ -651,6 +763,11 @@ export function Docs() {
                 ["limited", "installed but host limits apply, such as untrusted Codex hooks"],
               ]}
             />
+            <p>
+              <code>sutra stats</code> reports the aggregate savings log. Request-stage rewrites also
+              leave a content-free record in <code>&lt;stats&gt;-request.jsonl</code>: time, mode,
+              host session, and before, after and saved bytes.
+            </p>
             <Note title="Evidence, not configuration">
               Doctor does not accept a config file as proof. It runs the hook path, starts the MCP
               server, restores a synthetic id through it, and verifies a protected diff stays
@@ -755,6 +872,18 @@ export function Docs() {
                 <dd>A foreign plugin or MCP entry already uses the SUTRA name. <code>sutra uninstall --client &lt;name&gt;</code> is the documented repair; backups are kept beside edited files.</dd>
               </div>
               <div>
+                <dt>DeepSeek Harness shows no bundle</dt>
+                <dd>Run <code>sutra install --client dsh</code> with <code>dsh</code> on <code>PATH</code>, then restart the harness. Check that the profile lists <code>dsh-sutra-host</code> under <code>$DSH_HOME/profiles/&lt;profile&gt;/package.json</code>; <code>sutra doctor --client dsh</code> reports the copy and the profile entry.</dd>
+              </div>
+              <div>
+                <dt>The request stage never rewrites</dt>
+                <dd>Confirm <code>SUTRA_PROMPT=1</code> reaches the host process, that the request is above the mode's minimum, and that <code>SUTRA_PROMPT_MIN_SAVING_PERCENT</code> is not refusing the trim. The newest six messages are never touched.</dd>
+              </div>
+              <div>
+                <dt>Hermes reports <code>copy=stale</code></dt>
+                <dd>The installed plugin predates a stage this package declares. Reinstall <code>--client hermes</code> and restart the gateway; the older copy keeps executing only the stages it declared.</dd>
+              </div>
+              <div>
                 <dt>Windows hosts</dt>
                 <dd>Core, CLI, wheel and adapter CI run on Windows; the live Claude, Codex and Hermes host probes are Linux-only and no Windows host claim is made.</dd>
               </div>
@@ -773,7 +902,7 @@ export function Docs() {
             </p>
             <CodeBlock
               label="uninstall"
-              code={"sutra uninstall\nsutra uninstall --client claude\nsutra uninstall --client opencode\nsutra uninstall --client openclaw\nsutra uninstall --client codex\nsutra uninstall --client hermes"}
+              code={"sutra uninstall\nsutra uninstall --client claude\nsutra uninstall --client opencode\nsutra uninstall --client openclaw\nsutra uninstall --client codex\nsutra uninstall --client dsh\nsutra uninstall --client hermes"}
               note="Remove retained originals separately: $HERMES_HOME/cache/sutra-store or SUTRA_STORE_DIR. No other SUTRA state is required to keep."
             />
           </Section>
@@ -794,6 +923,45 @@ export function Docs() {
                 ["JSON-array bytes changed", "0"],
               ]}
             />
+            <h3>Live host evidence</h3>
+            <Table
+              head={["surface", "what ran", "result"]}
+              rows={[
+                [
+                  "Hermes tool stage",
+                  "gateway on main, SUTRA_PROMPT=1",
+                  "1,893 rewrites; 97,986,207 B removed of 127,784,080 B (76.7%)",
+                ],
+                [
+                  "Hermes request stage",
+                  "same gateway, balanced",
+                  "19 rewrites across 10 sessions; 1,613,059 B → 1,303,779 B (19.2%)",
+                ],
+                [
+                  "Claude Code 2.1.268",
+                  "installed PostToolUse hook + MCP, scripted provider",
+                  "70,888 B → 18,645 B; clue restored through MCP",
+                ],
+                [
+                  "OpenCode 1.19.5 / OpenClaw 0.1.0",
+                  "scripted provider, real Bash tool",
+                  "48,436 B → 18,649 B; clue restored",
+                ],
+                ["Codex CLI 0.166.0", "trusted hook, scripted Responses provider", "10,110 B → 4,837 B"],
+                [
+                  "DeepSeek Harness",
+                  "host bundle, offline seam check",
+                  "53,890 B → 18,340 B with a restore id",
+                ],
+                ["sutra proxy", "socket tests only", "no live model pair"],
+              ]}
+            />
+            <Note tone="warn" title="What these numbers are not">
+              Harness rows used scripted providers; the Hermes rows are from a real gateway. None
+              are invoices. The request-stage A/B used two seeds per arm and removed bytes while
+              billing more prompt tokens until a 25% floor refused the small trims. No task-success
+              or billing saving is claimed.
+            </Note>
             <h3>Mode benchmark</h3>
             <p>
               Eleven workloads, 830,619 input bytes, one host and commit. The table records bytes,
@@ -815,11 +983,12 @@ export function Docs() {
             </Note>
             <h3>What is not claimed</h3>
             <ul className="doc-list">
-              <li>No live-model A/B result is published; protocol v1 (8 tasks) and v2 (30 tasks) are defined, not run.</li>
+              <li>No task-success benchmark is published; protocol v1 (8 tasks) and v2 (30 tasks) are defined, not run.</li>
               <li>Host capabilities differ. Automatic replacement needs a documented host hook.</li>
               <li>Recovery is bounded by the store and response limits.</li>
               <li>The store is unencrypted and readable by the same user.</li>
               <li>Larger modes are not guaranteed to save more.</li>
+              <li>The proxy has socket tests, not a live model pair; the DeepSeek bundle's handler was run against the seam offline.</li>
             </ul>
             <p className="doc-links">
               <a href={DOCS_LINKS.benchmark} target="_blank" rel="noopener noreferrer">benchmark method</a>

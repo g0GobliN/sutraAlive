@@ -11,7 +11,7 @@ export function Clients() {
             <h2 id="clients-title">
               One core.
               <br />
-              <span className="soft">Five automatic paths.</span>
+              <span className="soft">Six automatic paths.</span>
             </h2>
           </div>
           <p className="clients__aside">

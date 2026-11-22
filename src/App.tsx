@@ -27,7 +27,7 @@ const TITLES = {
 
 const DESCRIPTIONS = {
   site: "SUTRA is a deterministic optimization layer for AI coding agents. Cut oversized tool output, reuse exact repeats, and keep every omitted byte restorable — with no summarizer in the loop.",
-  docs: "Install and operate SUTRA: Hermes Agent, Claude Code, OpenCode, OpenClaw, Codex CLI, MCP clients and the CLI. Mechanisms, commands, limits and recovery.",
+  docs: "Install and operate SUTRA: Hermes Agent, Claude Code, OpenCode, OpenClaw, Codex CLI, DeepSeek Harness, MCP clients and the CLI. Mechanisms, request-stage proxy, commands, limits and recovery.",
   privacy:
     "How SUTRA handles data: a static site without analytics, local-only processing in the package, and contact details for privacy questions.",
   terms:

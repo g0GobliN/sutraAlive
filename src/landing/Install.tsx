@@ -14,16 +14,17 @@ export function Install() {
             <span className="soft">Then normal work.</span>
           </h2>
           <p>
-            SUTRA runs on the tool path, not as a proxy. The installer detects supported clients,
-            backs up every file it edits, and removes only its own entries on uninstall.
+            SUTRA runs on the tool path by default; a request-stage proxy is optional. The installer
+            detects supported clients, backs up every file it edits, and removes only its own entries
+            on uninstall.
           </p>
           <p className="install__note">
             Python 3.11 or newer. Restart the host after installing. Codex additionally needs a
             one-time <code>/hooks</code> trust review.
           </p>
           <p className="install__version">
-            PyPI <code>sutra-agent</code> <Version />. The four-mode switch is on <code>main</code>{" "}
-            and documented ahead of the next release.
+            PyPI <code>sutra-agent</code> <Version />. The four-mode switch, request-stage proxy and
+            DeepSeek harness bundle are on <code>main</code> and documented ahead of the next release.
           </p>
         </div>
 
