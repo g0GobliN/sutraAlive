@@ -1,0 +1,648 @@
+export type RecoveryBlock =
+  | { t: "h2"; text: string }
+  | { t: "h3"; text: string }
+  | { t: "p"; text: string }
+  | { t: "ul" | "ol"; items: string[] }
+  | { t: "code"; text: string }
+  | { t: "img"; src: string; alt: string }
+  | { t: "table"; head: string[]; rows: string[][] };
+
+export const RECOVERY: RecoveryBlock[] = [
+  {
+    "t": "p",
+    "text": "This is the contract between SUTRA and the agent that receives its output. It exists so that a shortened tool result is never mistaken for a complete one, and so that the removed bytes can be fetched without trusting the model to invent them."
+  },
+  {
+    "t": "h2",
+    "text": "1. Identity"
+  },
+  {
+    "t": "p",
+    "text": "Every retained original gets an id:"
+  },
+  {
+    "t": "code",
+    "text": "su_0123456789abcdef0123456789abcdef"
+  },
+  {
+    "t": "p",
+    "text": "`su_` plus 32 lowercase hex characters from `secrets.token_hex(16)` — 128 bits of randomness. The id is the only handle the model ever sees; it contains no path, no session and no timestamp. Requests are validated against `^su_[0-9a-f]{32}$` before any filesystem path is constructed, so an id cannot name a file outside the store."
+  },
+  {
+    "t": "p",
+    "text": "Ids are scoped to one Hermes profile: the store lives under `$HERMES_HOME/cache/sutra-store/`, and two profiles do not share it. An id from another profile is reported as `not_found`."
+  },
+  {
+    "t": "h2",
+    "text": "2. The marker"
+  },
+  {
+    "t": "p",
+    "text": "A rewritten result carries a single-line marker in place of the omitted bytes."
+  },
+  {
+    "t": "p",
+    "text": "**Top-level elision** (plain text, traceback, or a whole-payload elision):"
+  },
+  {
+    "t": "code",
+    "text": "[sutra: partial · 133,522 bytes elided (large output) · id=su_… ·\n original 151,920 B retained 168h ·\n retrieve: sutra_restore(id=\"su_…\", mode=\"bytes\", start=12259, end=145781)]"
+  },
+  {
+    "t": "p",
+    "text": "`start` is the first omitted byte and `end` is one past the last omitted byte, counted in the UTF-8 encoding of the original. Both are exact, both were computed by the code that did the cutting, and both sit on character boundaries: `[start, end)` is exactly the omitted region of the stored original. The visible copy can be smaller than the original on either side — ANSI escapes and collapsed lines are dropped after the offsets are fixed — but restoring `[start, end)` returns exactly the omitted bytes."
+  },
+  {
+    "t": "p",
+    "text": "**Field elision** (inside one JSON string field):"
+  },
+  {
+    "t": "code",
+    "text": "[sutra: partial · 40,470 bytes elided (large output) · field=\"/output\" ·\n id=su_… · original 85,921 B retained 168h ·\n retrieve: sutra_restore(id=\"su_…\", field=\"/output\", mode=\"bytes\",\n                            start=12280, end=52750)]"
+  },
+  {
+    "t": "p",
+    "text": "The offsets are relative to that field's UTF-8 bytes, so the `field` argument must travel with them. `field` is a JSON pointer (`/output`, `/items/3/log`); `~0` and `~1` escape `~` and `/` in keys. A pointer is at most 256 UTF-8 bytes, and it must be quotable verbatim in both the marker and the suggested call; a field whose path would be longer, or whose key contains a quote, backslash, newline, `]` or `)` is left uncompressed rather than labelled with a pointer recovery cannot resolve. In that case the document is returned whole for that field, so no evidence is claimed or lost."
+  },
+  {
+    "t": "p",
+    "text": "**No storage** (disabled, over quota, too large, or the write failed): the original is returned unchanged. SUTRA emits no marker, no id, and no elided bytes; `stats.rule` is one of the `recovery-*-kept` values and the caller can re-run the tool narrower if it wants a smaller result. A lossless formatting or wording pass may still apply, and it needs no stored original."
+  },
+  {
+    "t": "p",
+    "text": "**Repeat collapse** uses its own marker, with the same id. It names the first omitted line and the omitted range in the scope (`end` is exclusive), so the call needs no substitution:"
+  },
+  {
+    "t": "code",
+    "text": "[sutra: 4,998 identical line(s) omitted · id=su_… ·\n retrieve: sutra_restore(id=\"su_…\", mode=\"lines\", start=3, end=5001)]"
+  },
+  {
+    "t": "p",
+    "text": "Inside a JSON field the marker adds `field=\"/log\"`, and the line numbers are relative to that field, not the enclosing document. Line numbers address the retained original: they do not count the marker line inserted into the rewritten copy. If the engine cannot align its line numbers with the retrieval tool's (a form feed, a lone CR, or a tail fragment that starts on a line break), the marker states that the omitted lines cannot be addressed by line number and quotes no call. It never emits a placeholder query or a `mode` that the default content cap would refuse."
+  },
+  {
+    "t": "h3",
+    "text": "Marker grammar"
+  },
+  {
+    "t": "code",
+    "text": "marker      = \"[sutra: partial · \" size \" bytes elided (\" reason \")\" scope? id? retention? remedy? \"]\"\nsize        = 1*DIGIT *(\",\" 3DIGIT)      ; informational, not parsed by the tool\nscope       = \" · field=\\\"\" pointer \"\\\"\"  ; only for an elision inside a JSON field\nid          = \" · id=\" ( \"su_\" 32HEXDIG )\nretention   = \" · original \" size \" B retained \" hours \"h\"\nremedy      = \" · retrieve: sutra_restore(\" args \")\""
+  },
+  {
+    "t": "p",
+    "text": "The marker is text for a model, not a serialization format. The durable contract is the id plus the optional field and either the two byte offsets (a partial elision) or the line range (a repeat-collapse marker). A repeat marker that cannot quote a resolvable line range deliberately quotes no call."
+  },
+  {
+    "t": "img",
+    "alt": "The evidence loop: the tool result enters the middleware, which retains the original bytes under an id and hands the model a smaller result whose marker carries that id; the agent can then call sutra_restore to get an exact slice of the original, bounded to 8 KiB per response",
+    "src": "/assets/recovery-flow.svg"
+  },
+  {
+    "t": "h2",
+    "text": "3. The tool"
+  },
+  {
+    "t": "p",
+    "text": "`sutra_restore` is registered with Hermes' `ctx.register_tool()` in toolset `sutra`. It is a normal tool: visible only when that toolset is enabled for the session's platform, and its output passes back through the model context like any other tool result."
+  },
+  {
+    "t": "p",
+    "text": "**Tool Search deferral.** When Hermes' Tool Search (progressive disclosure) is active, plugin tools — including this one — may be deferred behind the `tool_search` / `tool_describe` / `tool_call` bridge instead of appearing in the model's direct tool list. The tool still exists, is still registered, and still dispatches; a model that reports \"no such tool\" while the toolset is enabled is hitting deferral, and its recovery path is `tool_search` for the tool, then `tool_call` with the marker's arguments. Operators who want the tool always eager can name it in Hermes' `tools.tool_search` configuration (defer list / threshold). The marker's suggested call is unchanged and works through either surface."
+  },
+  {
+    "t": "table",
+    "head": [
+      "Argument",
+      "Type",
+      "Default",
+      "Meaning"
+    ],
+    "rows": [
+      [
+        "`id`",
+        "string",
+        "required",
+        "the id from a marker"
+      ],
+      [
+        "`mode`",
+        "enum",
+        "`bytes`",
+        "`bytes`, `lines`, `search`, `full`"
+      ],
+      [
+        "`field`",
+        "string",
+        "none",
+        "JSON pointer (max 256 UTF-8 bytes) to scope the request to one string field"
+      ],
+      [
+        "`start`",
+        "integer",
+        "`0` / `1`",
+        "first byte (bytes) or first line (lines), inclusive"
+      ],
+      [
+        "`end`",
+        "integer",
+        "end of scope",
+        "exclusive byte offset or exclusive line number"
+      ],
+      [
+        "`query`",
+        "string",
+        "none",
+        "literal text for `search`, at most 200 characters"
+      ],
+      [
+        "`context`",
+        "integer",
+        "`3`",
+        "lines of context around a search hit, max 20"
+      ],
+      [
+        "`case_sensitive`",
+        "boolean",
+        "`true`",
+        "literal search case sensitivity"
+      ],
+      [
+        "`max_matches`",
+        "integer",
+        "`5`",
+        "maximum matching lines, max 20"
+      ],
+      [
+        "`max_bytes`",
+        "integer",
+        "`8192`",
+        "returned-content cap, min 512, max 65536"
+      ]
+    ]
+  },
+  {
+    "t": "p",
+    "text": "`search` is a literal substring scan over lines. There is no regular expression surface: a retrieval request cannot ask for work proportional to anything but the file size. `case_sensitive=false` still matches the query literally — it is escaped before the case-insensitive comparison, never treated as a pattern. Semantic ranking is deliberately not part of this protocol; the decision and its evidence are in [semantic-retrieval.md](https://github.com/g0GobliN/sutra/blob/main/docs/semantic-retrieval.md)."
+  },
+  {
+    "t": "h2",
+    "text": "4. Modes"
+  },
+  {
+    "t": "table",
+    "head": [
+      "Mode",
+      "Range",
+      "Complete when",
+      "Pages with"
+    ],
+    "rows": [
+      [
+        "`bytes`",
+        "`[start, end)` in UTF-8 bytes",
+        "the whole range was returned; both offsets are character boundaries",
+        "`next = {mode:\"bytes\", start, end, field?}`"
+      ],
+      [
+        "`lines`",
+        "`[start, end)`, 1-based",
+        "the whole range was returned",
+        "`next = {mode:\"lines\", start, end, field?}`"
+      ],
+      [
+        "`search`",
+        "up to `max_matches` hits with `context` lines around each",
+        "no truncation and no further matches",
+        "narrow the query, or raise `max_matches`"
+      ],
+      [
+        "`full`",
+        "the whole scope",
+        "always, if it fits under `max_bytes`",
+        "`bytes` / `lines` / `search` instead"
+      ]
+    ]
+  },
+  {
+    "t": "p",
+    "text": "`bytes` paging stops on a UTF-8 character boundary, so concatenating successive pages reproduces the original slice exactly — including multi-byte text. A requested `start` or `end` that falls inside a multi-byte character is an explicit `error`, not a page that quietly returns fewer bytes than its `range` claims. Move the offset to a boundary, or use the `next` range the previous page returned. A literal U+FFFD in the original is content, not a partial-decode artifact: a range covering one returns it exactly, and the protocol never trims it to guess where a character ends."
+  },
+  {
+    "t": "p",
+    "text": "`lines` and `search` render blocks with a header line:"
+  },
+  {
+    "t": "code",
+    "text": "--- lines 120-127 ---"
+  },
+  {
+    "t": "p",
+    "text": "A single line longer than the response budget is returned clipped around the match, with an explicit note naming the byte window:"
+  },
+  {
+    "t": "code",
+    "text": "--- line 1 (clipped) ---\n…the text around the match…\n[sutra: line 1 clipped, bytes 40960-49152 of 85921]"
+  },
+  {
+    "t": "p",
+    "text": "A clipped line consumes its line range, so no `next` is offered: asking for the next line would return nothing. The note says the range was clipped; continue with `mode=bytes` when the remaining bytes of that line matter."
+  },
+  {
+    "t": "h3",
+    "text": "Execution-time envelope"
+  },
+  {
+    "t": "p",
+    "text": "There is no wall-clock timeout. A synchronous handler cannot interrupt a `splitlines()` or `json.loads()` call reliably, and a deadline checked after the work would only relabel the cost. The enforced work bounds are structural:"
+  },
+  {
+    "t": "ul",
+    "items": [
+      "one entry, at most `SUTRA_STORE_MAX_ENTRY_BYTES` (32 MiB by default);",
+      "returned content, at most 64 KiB (`SUTRA_RECOVERY_MAX_BYTES` defaults to 8 KiB; the JSON envelope adds a small metadata header);",
+      "at most 20 matching lines (5 by default);",
+      "at most a 200-character literal query."
+    ]
+  },
+  {
+    "t": "p",
+    "text": "Work is linear in the entry size, and an entry above the per-entry cap is never retained. Measured on a 32,000,001-byte plain entry and a 32,400,015-byte JSON document, just under the 32 MiB default cap, with the repository's `.venv` and Hermes Agent."
+  },
+  {
+    "t": "p",
+    "text": "The plugin itself is validated against Hermes Agent v0.22.2+3030.g4d04303."
+  },
+  {
+    "t": "p",
+    "text": "The latest `bench/retrieval.json` was recorded at **load 22.36 on 4 CPUs (5.59 per CPU)** and records `\"representative\": false`. It is a contended sample, not an envelope:"
+  },
+  {
+    "t": "table",
+    "head": [
+      "Operation near the 32 MiB default cap",
+      "Median",
+      "Worst of 3",
+      "Status"
+    ],
+    "rows": [
+      [
+        "`full` (refuses above 8 KiB)",
+        "18.6 ms",
+        "23.6 ms",
+        "`too_large`"
+      ],
+      [
+        "`bytes` page, 64 KiB",
+        "20.8 ms",
+        "24.7 ms",
+        "`ok`"
+      ],
+      [
+        "`lines` page, 100 lines",
+        "486.9 ms",
+        "534.8 ms",
+        "`ok`"
+      ],
+      [
+        "`search`, token absent (full scan)",
+        "507.1 ms",
+        "1425.1 ms",
+        "`ok`"
+      ],
+      [
+        "`search`, token in the last line",
+        "486.2 ms",
+        "674.6 ms",
+        "`ok`"
+      ],
+      [
+        "`full` JSON field (refuses)",
+        "383.6 ms",
+        "820.7 ms",
+        "`too_large`"
+      ],
+      [
+        "`bytes` JSON field page",
+        "176.6 ms",
+        "259.9 ms",
+        "`ok`"
+      ],
+      [
+        "`search`, JSON field, no match",
+        "732.8 ms",
+        "2200.5 ms",
+        "`ok`"
+      ],
+      [
+        "`search`, JSON field, last line",
+        "541.2 ms",
+        "1332.8 ms",
+        "`ok`"
+      ]
+    ]
+  },
+  {
+    "t": "p",
+    "text": "The `bytes` rows request a 64 KiB range; the default content cap clips it to 8 KiB, which is what the benchmark records. The 2026-10-25 artifact recorded 480.7 ms for the absent-token JSON-field search and 504.4 ms for the last-line search, and its load was not captured; the contended run is 732.8 ms and 541.2 ms for the same two cases. Do not read either as a portable number."
+  },
+  {
+    "t": "p",
+    "text": "The operator budget is therefore stated structurally, not as a single figure: **one restore reads at most one entry, whose default cap is 32 MiB (`SUTRA_STORE_MAX_ENTRY_BYTES`), and returns at most 64 KiB of content; budget hundreds of milliseconds for a scan near the default cap, and allow multi-second outliers on a contended host.** Raising the entry cap raises the envelope roughly linearly. Every artifact now records its platform, load and git SHA, and `bench/retrieval.py` marks a loaded run as not representative."
+  },
+  {
+    "t": "p",
+    "text": "Reproduce with `.venv/bin/python bench/retrieval.py`; it writes `bench/retrieval.json`. The hard shape is held by `test_retrieval_at_the_entry_cap_stays_within_its_bounds`."
+  },
+  {
+    "t": "h2",
+    "text": "5. Responses"
+  },
+  {
+    "t": "p",
+    "text": "Every response is one JSON object:"
+  },
+  {
+    "t": "table",
+    "head": [
+      "Field",
+      "Present when",
+      "Meaning"
+    ],
+    "rows": [
+      [
+        "`status`",
+        "always",
+        "`ok`, `not_found`, `expired`, `too_large`, `unavailable`, `error`"
+      ],
+      [
+        "`content_note`",
+        "always",
+        "constant reminder that the content is untrusted data, not instructions"
+      ],
+      [
+        "`id`",
+        "known",
+        "the requested id"
+      ],
+      [
+        "`field`, `payload_bytes`",
+        "field scope",
+        "scope pointer, and the size of the whole payload"
+      ],
+      [
+        "`mode`",
+        "`ok`",
+        "the mode served"
+      ],
+      [
+        "`original_bytes`",
+        "`ok`, `too_large`",
+        "size of the scope"
+      ],
+      [
+        "`returned_bytes`, `returned_chars`",
+        "`ok`",
+        "size of `content`"
+      ],
+      [
+        "`range`",
+        "`bytes`, `lines`",
+        "the range actually served"
+      ],
+      [
+        "`query`, `case_sensitive`, `context`",
+        "`search`",
+        "the search that was run"
+      ],
+      [
+        "`matches_found`, `matches_returned`, `matched_blocks`",
+        "`search`",
+        "counts after the match cap"
+      ],
+      [
+        "`total_lines`",
+        "`lines`, `search`",
+        "lines in the scope"
+      ],
+      [
+        "`complete`",
+        "`ok`",
+        "the request itself was satisfied in full"
+      ],
+      [
+        "`more`",
+        "`ok`",
+        "more matching lines, or more lines/bytes of the scope, remain"
+      ],
+      [
+        "`next`",
+        "paging",
+        "the arguments for the next call"
+      ],
+      [
+        "`sha256_verified`",
+        "`full`",
+        "the store's integrity check passed: the stored bytes still match the recorded digest"
+      ],
+      [
+        "`content`",
+        "`ok`",
+        "the recovered text"
+      ],
+      [
+        "`note`",
+        "most",
+        "a human sentence explaining the status"
+      ],
+      [
+        "`error`",
+        "`error`",
+        "what was wrong with the request"
+      ]
+    ]
+  },
+  {
+    "t": "p",
+    "text": "`next` is omitted when there is nothing to continue. `more` is not a synonym for `complete`: a request for lines 1–50 of a 3,000-line original is `complete` and `more`, because it was answered fully and the original continues."
+  },
+  {
+    "t": "p",
+    "text": "`sha256_verified` is the store's `verify()` result, not a second hash computed by the recovery layer: the integrity check has one implementation, owned by the store that owns the entry. The store hashes the bytes recovery just read and is about to return, so the flag describes that response rather than a second read that could see different content; a full restore opens the entry file once. Without supplied bytes, `verify(entry)` still reads the file once itself."
+  },
+  {
+    "t": "h3",
+    "text": "Statuses"
+  },
+  {
+    "t": "table",
+    "head": [
+      "Status",
+      "Meaning",
+      "What the agent should do"
+    ],
+    "rows": [
+      [
+        "`ok`",
+        "served",
+        "use the content as evidence"
+      ],
+      [
+        "`not_found`",
+        "no entry with that id: never retained, pruned, or wrong id",
+        "re-run the tool narrower"
+      ],
+      [
+        "`expired`",
+        "retained once, deleted by the TTL or quota (or vanished mid-read)",
+        "re-run the tool narrower"
+      ],
+      [
+        "`too_large`",
+        "the scope exceeds the returned-content cap",
+        "ask for a range or a literal search"
+      ],
+      [
+        "`unavailable`",
+        "storage is disabled (`SUTRA_STORE=0`)",
+        "re-run the tool narrower"
+      ],
+      [
+        "`error`",
+        "malformed request (bad id, bad pointer, oversized query)",
+        "fix the arguments"
+      ]
+    ]
+  },
+  {
+    "t": "h2",
+    "text": "6. Failure matrix"
+  },
+  {
+    "t": "table",
+    "head": [
+      "Situation",
+      "Behaviour"
+    ],
+    "rows": [
+      [
+        "store disabled",
+        "original returned unchanged; no marker or id; `recovery-unavailable-kept`"
+      ],
+      [
+        "per-entry cap exceeded",
+        "original returned unchanged; no marker or id; `recovery-over-limit-kept`"
+      ],
+      [
+        "quota exceeded after write",
+        "the new entry is pruned immediately; original returned unchanged; `recovery-store-failed-kept`"
+      ],
+      [
+        "TTL elapsed",
+        "entry deleted on lookup; `expired`"
+      ],
+      [
+        "data file truncated or missing",
+        "deleted on lookup; `not_found`"
+      ],
+      [
+        "metadata present, data missing",
+        "metadata removed; `not_found`"
+      ],
+      [
+        "store path is a symlink",
+        "store refuses to write; original returned unchanged"
+      ],
+      [
+        "interrupted write",
+        "temp file, never an entry; cleaned up after an hour"
+      ],
+      [
+        "cleanup between lookup and read",
+        "read raises, tool answers `expired`"
+      ],
+      [
+        "unknown id",
+        "`not_found` (after id validation)"
+      ],
+      [
+        "malformed id",
+        "`error`"
+      ],
+      [
+        "handler exception",
+        "`error` with the class name and a 200-character message; never raised into the agent loop"
+      ],
+      [
+        "byte range splits a UTF-8 character",
+        "`error`; no content is returned and the caller is told which offset is not a boundary"
+      ],
+      [
+        "search finds a query inside a clipped long line",
+        "the clip is centred on the original match, so the returned block contains the query"
+      ]
+    ]
+  },
+  {
+    "t": "h2",
+    "text": "7. Storage"
+  },
+  {
+    "t": "p",
+    "text": "`$HERMES_HOME/cache/sutra-store/` (or `SUTRA_STORE_DIR`):"
+  },
+  {
+    "t": "code",
+    "text": "su_<32 hex>.txt    the original, UTF-8, byte-exact, 0600\nsu_<32 hex>.json   {id, created_at, original_bytes, sha256, tool, session_id, version}, 0600"
+  },
+  {
+    "t": "p",
+    "text": "The directory is `0700`, and a pre-existing one is tightened to it; a directory owned by another user is refused. Both files are opened with `O_NOFOLLOW`, so a symlink planted at either path is not followed. Writes go to a `.tmp-*` file in the same directory and are renamed into place, metadata last; a data file without metadata is invisible, and a failed metadata write removes it. The entry count and byte quota are checked on every write against in-process totals. A full sweep — expired entries first, then oldest-first until the quotas are satisfied — runs when a budget is exceeded, every 128 writes, or every ten minutes, so a write does not scan the whole store. The first write in a process seeds the totals with one sweep, which also expires entries and drops orphans. The totals are per process; another process writing to the same directory is reconciled by the next sweep. An expired entry is refused on read regardless of when the sweep reaches it. Readers see a complete entry or a missing one."
+  },
+  {
+    "t": "h3",
+    "text": "Snapshot and log scope"
+  },
+  {
+    "t": "p",
+    "text": "`sutra.metrics_snapshot()` is the one read surface for runtime state — compression decisions, restore outcomes, cleanup, and the store's current size:"
+  },
+  {
+    "t": "code",
+    "text": ">>> sutra.metrics_snapshot()\n{\"scope\": \"process\",\n \"scope_note\": \"Counters cover this Hermes plugin-host process only; they reset on restart. The JSONL stats log is durable and retains rewritten results only.\",\n \"restores\": {\"total\": 6, \"ok\": 1, \"bad_id\": 1, \"expired\": 1, \"not_found\": 1,\n              \"range\": 1, \"unavailable\": 1},\n \"cleanup\": {\"runs\": 3, \"entries\": 3, \"bytes\": 1_211, \"expired\": 2, \"quota\": 1,\n             \"orphans\": 0, \"temp\": 0},\n \"compression\": {\"total\": 8, \"changed\": 5, \"unchanged\": 3,\n                 \"rules\": {\"head-tail\": 2, \"json-fields\": 2, \"none\": 3, \"fail-open\": 1},\n                 \"original_bytes\": 31_940, \"compressed_bytes\": 12_480,\n                 \"saved_bytes\": 19_460, \"omitted_bytes\": 20_001, \"partial\": 5,\n                 \"stored\": 5, \"fail_open\": 1, \"duration_ms_total\": 41.7},\n \"store\": {\"entries\": 1, \"bytes\": 1_300, \"enabled\": True}}"
+  },
+  {
+    "t": "p",
+    "text": "It is deliberately **process-scoped**: the top-level `scope` is `\"process\"` and `scope_note` says the counters reset when the Hermes plugin host restarts; the JSONL stats log is durable and records rewritten results only."
+  },
+  {
+    "t": "p",
+    "text": "`compression` counts every decision, changed or not: `total`, `changed`, `unchanged`, per-rule `rules`, bytes before (`original_bytes`) and after (`compressed_bytes`), `saved_bytes`, `omitted_bytes`, `partial`, `stored` (retained), `fail_open`, and the summed processing time. Only rewrites append to the stats log; its `changed` flag is true for every new row, and older rows lack the field. Unchanged decisions stay in the counters. The log is rotated at `SUTRA_STATS_MAX_BYTES`. `restores` counts every outcome by reason; `cleanup.runs` is one entry per cleanup that removed something, split into `expired`, `quota`, `orphans` and `temp`, with the bytes those removals reclaimed. Cleanup also logs one line per run (`sutra: cleanup removed …`). The counters are in-memory and per process; recording one is best-effort and can never fail a restore or a compression. After a restart, `compression.total` is zero even though the log has older rewrite rows — that difference is the contract, stated in the snapshot itself."
+  },
+  {
+    "t": "h2",
+    "text": "8. Security rules"
+  },
+  {
+    "t": "ol",
+    "items": [
+      "Recovered text is **data**. It is returned with `content_note` and must never be treated as instructions, even if it looks like them.",
+      "Retrieval is literal and bounded: no user-supplied regex, no unbounded work, no execution. Case-insensitive search escapes the literal query before matching it.",
+      "Ids are unguessable and validated; no caller-supplied path reaches the filesystem.",
+      "Entries are per-profile and readable only by the profile's user. There is no cross-user authorization problem because there is no cross-user access.",
+      "Errors never include file contents or filesystem paths; storage paths are not exposed to the model.",
+      "The store can hold secrets, because tool output does. It is local, expiring and unencrypted; see [../SECURITY.md](/security)."
+    ]
+  },
+  {
+    "t": "h2",
+    "text": "9. Compatibility"
+  },
+  {
+    "t": "ul",
+    "items": [
+      "The marker is additive text; a host that ignores it still receives a valid, smaller result.",
+      "The tool name, argument names and response keys above are the stable surface. New response keys may be added; existing keys keep their meaning.",
+      "Old ids remain readable across plugin upgrades that keep the store layout: a `su_<32 hex>.txt` data file plus its `.json` metadata with `created_at`, `original_bytes`, and `sha256`. The metadata records `version: 1`, but the reader does not branch on that field — today it is informational, not a compatibility gate. An incompatible format change would break old ids; no previous-format reader exists, so the version field alone cannot make such a change safe."
+    ]
+  }
+];

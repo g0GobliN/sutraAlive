@@ -1,5 +1,8 @@
 import { useEffect, useState, type ReactNode } from "react";
+import { ArtPlate } from "../components/ArtPlate";
 import { CodeBlock } from "../components/CodeBlock";
+import { PageArt } from "../components/PageArt";
+import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
 import { Version } from "../components/Version";
 import {
@@ -210,10 +213,12 @@ export function Docs() {
       <a className="skip" href="#docs-body">
         Skip to documentation
       </a>
+      <PageArt src="/assets/art/tablet.png" />
       <SiteHeader docs />
 
       <header className="docs-hero">
         <div className="wrap docs-hero__inner">
+          <div className="docs-hero__text">
           <p className="kicker">documentation</p>
           <h1>
             Field manual.
@@ -238,6 +243,13 @@ export function Docs() {
               repository <span aria-hidden="true">↗</span>
             </a>
           </div>
+          </div>
+
+          <ArtPlate
+            className="docs-hero__art"
+            src="/assets/art/tablet.png"
+            caption="plate i · the field tablet"
+          />
         </div>
       </header>
 
@@ -321,7 +333,7 @@ export function Docs() {
               <a href={DOCS_LINKS.optimization} target="_blank" rel="noopener noreferrer">optimization model</a>
               <a href={DOCS_LINKS.universal} target="_blank" rel="noopener noreferrer">host audit</a>
               <a href={DOCS_LINKS.proxy} target="_blank" rel="noopener noreferrer">request-stage proxy</a>
-              <a href={DOCS_LINKS.security} target="_blank" rel="noopener noreferrer">security model</a>
+              <a href={DOCS_LINKS.security}>security model</a>
               <a href={DOCS_LINKS.benchmark} target="_blank" rel="noopener noreferrer">benchmark method</a>
             </p>
           </Section>
@@ -435,9 +447,7 @@ export function Docs() {
               automatic path.
             </Note>
             <p className="doc-links">
-              <a href={DOCS_LINKS.integrations} target="_blank" rel="noopener noreferrer">
-                full matrix, evidence and limits
-              </a>
+              <a href={DOCS_LINKS.integrations}>full matrix, evidence and limits</a>
             </p>
           </Section>
 
@@ -1011,17 +1021,7 @@ export function Docs() {
         </article>
       </div>
 
-      <footer className="docs-footer">
-        <div className="wrap docs-footer__inner">
-          <span>SUTRA · field manual</span>
-          <span>
-            <Version link /> · <a href="/privacy">privacy</a> · <a href="/terms">terms</a> ·{" "}
-            <a href="/contact">contact</a> · MIT ·{" "}
-            <a href={PYPI} target="_blank" rel="noopener noreferrer">pypi</a> ·{" "}
-            <a href={GITHUB} target="_blank" rel="noopener noreferrer">github</a>
-          </span>
-        </div>
-      </footer>
+      <SiteFooter root />
     </div>
   );
 }

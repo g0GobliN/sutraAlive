@@ -1,5 +1,5 @@
 import { DOCS_LINKS, GITHUB, PYPI } from "../data";
-import { Logo } from "./Logo";
+import { Mark } from "./Mark";
 import { Version } from "./Version";
 
 export function SiteFooter({ root = false }: { root?: boolean }) {
@@ -10,7 +10,9 @@ export function SiteFooter({ root = false }: { root?: boolean }) {
       <div className="wrap footer__grid">
         <div className="footer__brand">
           <div className="footer__lockup">
-            <Logo size={28} />
+            <span className="footer__mark">
+              <Mark />
+            </span>
             <span className="footer__word">SUTRA</span>
           </div>
           <p>Less output. More signal.</p>
@@ -32,24 +34,17 @@ export function SiteFooter({ root = false }: { root?: boolean }) {
             <a href={PYPI} target="_blank" rel="noopener noreferrer">
               pypi
             </a>
-            <a href={DOCS_LINKS.recovery} target="_blank" rel="noopener noreferrer">
-              recovery protocol
-            </a>
+            <a href={DOCS_LINKS.recovery}>recovery protocol</a>
           </div>
           <div>
             <span className="footer__label">the fine print</span>
             <a href="/privacy">privacy</a>
             <a href="/terms">terms</a>
             <a href="/contact">contact</a>
-            <a href={DOCS_LINKS.security} target="_blank" rel="noopener noreferrer">
-              security model
-            </a>
-            <a href={DOCS_LINKS.license} target="_blank" rel="noopener noreferrer">
-              MIT license
-            </a>
+            <a href={DOCS_LINKS.security}>security model</a>
+            <a href={DOCS_LINKS.license}>MIT license</a>
           </div>
         </nav>
-
       </div>
 
       <div className="wrap footer__meta">
@@ -61,8 +56,9 @@ export function SiteFooter({ root = false }: { root?: boolean }) {
         </a>
       </div>
 
-      <div className="footer__fade" aria-hidden="true">
-        SUTRA
+      <div className="footer__plate" aria-hidden="true">
+        <img className="footer__plate-mark" src="/assets/mark.png" alt="" loading="lazy" decoding="async" />
+        <span className="footer__plate-word">SUTRA</span>
       </div>
     </footer>
   );

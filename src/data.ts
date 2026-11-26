@@ -5,10 +5,10 @@ export const README = `${GITHUB}#readme`;
 export const HERMES = "https://hermes-agent.nousresearch.com";
 
 export const DOCS_LINKS = {
-  integrations: `${GITHUB}/blob/main/docs/integrations.md`,
+  integrations: "/integrations",
   modes: `${GITHUB}/blob/main/docs/modes.md`,
   configuration: `${GITHUB}/blob/main/docs/configuration.md`,
-  recovery: `${GITHUB}/blob/main/docs/recovery.md`,
+  recovery: "/recovery",
   troubleshooting: `${GITHUB}/blob/main/docs/troubleshooting.md`,
   benchmark: `${GITHUB}/blob/main/docs/benchmark.md`,
   contract: `${GITHUB}/blob/main/docs/contract.md`,
@@ -17,9 +17,9 @@ export const DOCS_LINKS = {
   optimization: `${GITHUB}/blob/main/docs/optimization-model.md`,
   abBenchmark: `${GITHUB}/blob/main/docs/ab-benchmark.md`,
   accounting: `${GITHUB}/blob/main/docs/accounting.md`,
-  security: `${GITHUB}/blob/main/SECURITY.md`,
+  security: "/security",
   contributing: `${GITHUB}/blob/main/CONTRIBUTING.md`,
-  license: `${GITHUB}/blob/main/LICENSE`,
+  license: "/mit-license",
 };
 
 export type Metric = {
@@ -214,16 +214,16 @@ export const CLIENTS: Client[] = [
     docs: "/docs#hermes",
   },
   {
-    id: "claude-code",
-    name: "Claude Code",
+    id: "deepseek",
+    name: "DeepSeek Harness",
     tier: "automatic",
     automatic: true,
-    mechanism: "PostToolUse hook + MCP recovery",
-    install: "sutra install --client claude",
-    restart: "start a new Claude Code session",
-    verify: "sutra doctor",
-    limit: "Hook and MCP must share a store. Large Bash output is read from persistedOutputPath after checks; a Read result is trimmed in file.content.",
-    docs: "/docs#claude-code",
+    mechanism: "host bundle: tools/post-execute + MCP recovery",
+    install: "sutra install --client dsh",
+    restart: "restart the harness",
+    verify: "sutra doctor --client dsh",
+    limit: "Needs a Python that can import SUTRA; 4 s timeout, fail-open. No request hook — point a provider at sutra proxy.",
+    docs: "/docs#deepseek",
   },
   {
     id: "opencode",
@@ -262,16 +262,16 @@ export const CLIENTS: Client[] = [
     docs: "/docs#codex",
   },
   {
-    id: "deepseek",
-    name: "DeepSeek Harness",
+    id: "claude-code",
+    name: "Claude Code",
     tier: "automatic",
     automatic: true,
-    mechanism: "host bundle: tools/post-execute + MCP recovery",
-    install: "sutra install --client dsh",
-    restart: "restart the harness",
-    verify: "sutra doctor --client dsh",
-    limit: "Needs a Python that can import SUTRA; 4 s timeout, fail-open. No request hook — point a provider at sutra proxy.",
-    docs: "/docs#deepseek",
+    mechanism: "PostToolUse hook + MCP recovery",
+    install: "sutra install --client claude",
+    restart: "start a new Claude Code session",
+    verify: "sutra doctor",
+    limit: "Hook and MCP must share a store. Large Bash output is read from persistedOutputPath after checks; a Read result is trimmed in file.content.",
+    docs: "/docs#claude-code",
   },
   {
     id: "mcp",
@@ -398,10 +398,8 @@ export const TOTALS = {
 };
 
 export const NAV_LINKS = [
-  { href: "#cost", label: "cost" },
-  { href: "#passage", label: "passage" },
+  { href: "#features", label: "features" },
+  { href: "#faq", label: "faq" },
   { href: "#modes", label: "modes" },
-  { href: "#proof", label: "proof" },
-  { href: "#clients", label: "clients" },
   { href: "#install", label: "install" },
 ];

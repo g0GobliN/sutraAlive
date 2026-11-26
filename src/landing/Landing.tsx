@@ -1,14 +1,11 @@
 import { SiteFooter } from "../components/SiteFooter";
 import { SiteHeader } from "../components/SiteHeader";
-import { Closing } from "./Closing";
-import { Cost } from "./Cost";
-import { CutDemo } from "./CutDemo";
+import { Faq } from "./Faq";
+import { Features } from "./Features";
 import { Hero } from "./Hero";
-import { Install } from "./Install";
-import { Clients } from "./Clients";
-import { Modes } from "./Modes";
-import { Passage } from "./Passage";
-import { Proof } from "./Proof";
+import { Plans } from "./Plans";
+import { Portal } from "./Portal";
+import { Surfaces } from "./Surfaces";
 
 export function Landing() {
   return (
@@ -17,22 +14,14 @@ export function Landing() {
         Skip to content
       </a>
 
-      <div className="rail" aria-hidden="true">
-        <span className="rail__word">SUTRA</span>
-        <span className="rail__meta">less output · more signal</span>
-      </div>
-
       <SiteHeader />
       <main id="main">
         <Hero />
-        <CutDemo />
-        <Cost />
-        <Passage />
-        <Modes />
-        <Proof />
-        <Clients />
-        <Install />
-        <Closing />
+        <Surfaces />
+        <Features />
+        <Faq />
+        <Plans />
+        <Portal />
       </main>
       <SiteFooter />
     </div>
