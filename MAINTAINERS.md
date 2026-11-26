@@ -68,5 +68,9 @@ ships. Do not add a host the package does not support.
 `src/styles.css` — `--paper #050505`, `--paper-2 #0C0C0C`, `--plate #F5F5F5`,
 `--ink #F5F5F5`, `--muted #8B8B8B`, `--signal #F5F5F5` (white is the only
 accent; there is no hue anywhere). Bricolage Grotesque for display, Instrument
-Sans for text, JetBrains Mono for commands, paths and the version. The square mark is `/assets/sutra-mark.png`,
-always shown on an off-white tile in the header and footer and never recoloured.
+Sans for text, JetBrains Mono for commands, paths and the version. The mark is `src/components/Mark.tsx`:
+the guard — an engraved stone guardian head with metal wings, white on the
+field, at 30px in the header, 34px in the footer and 28px on mobile. It is a
+raster cut from `public/assets/mark.png` (`mark-sm.png` is the 96px master the
+chrome loads), so the emblem is the one brand asset drawn outside CSS;
+`public/assets/favicon.png` is the same art on the field colour.

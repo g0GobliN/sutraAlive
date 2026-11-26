@@ -1,0 +1,158 @@
+<!doctype html>
+<!--
+  Source for public/assets/og.png (1200x630).
+  Serve the site locally, open /og-card.html, capture the full page and
+  downsample to 1200x630. The page renders at 5/3 so the capture is never
+  upscaled. Kept in the repo so the card can be regenerated exactly.
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>SUTRA — social card</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400&family=Barlow+Semi+Condensed:wght@400;500&family=JetBrains+Mono:wght@400&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --page: #19192f;
+        --ink: #f2f2f2;
+        --ink-2: #d5d5e4;
+        --muted: #9b9bb6;
+        --line: rgba(242, 242, 242, 0.16);
+        --peri: #8585f9;
+      }
+
+      html {
+        zoom: 1.6666667;
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+      }
+
+      body {
+        width: 1200px;
+        height: 630px;
+        background: var(--page);
+        color: var(--ink);
+        font-family: "Barlow Semi Condensed", system-ui, sans-serif;
+        overflow: hidden;
+      }
+
+      .card {
+        width: 1200px;
+        height: 630px;
+        padding: 64px 84px 58px;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .crest {
+        width: 216px;
+        flex: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 16px 18px;
+        border: 1px solid var(--line);
+        border-radius: 10px;
+      }
+
+      .crest img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      .top {
+        display: flex;
+        align-items: center;
+        gap: 40px;
+      }
+
+      .word {
+        display: block;
+        font-family: "Oswald", sans-serif;
+        font-weight: 300;
+        font-size: 58px;
+        line-height: 1;
+        letter-spacing: 0.18em;
+        text-indent: 0.18em;
+      }
+
+      .support {
+        display: block;
+        margin-top: 14px;
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+      }
+
+      .headline {
+        margin-top: auto;
+        font-family: "Oswald", sans-serif;
+        font-weight: 300;
+        font-size: 86px;
+        line-height: 1;
+        letter-spacing: -0.005em;
+        max-width: 13ch;
+      }
+
+      .rule {
+        height: 1px;
+        background: var(--line);
+        margin: 44px 0 20px;
+      }
+
+      .meta {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 40px;
+      }
+
+      .tagline {
+        color: var(--ink-2);
+        font-size: 26px;
+        line-height: 1.2;
+      }
+
+      .mono {
+        font-family: "JetBrains Mono", monospace;
+        font-size: 13px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--muted);
+        white-space: nowrap;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="top">
+        <span class="crest"><img src="/assets/mark.png" alt="" /></span>
+        <span>
+          <span class="word">SUTRA</span>
+          <span class="support">deterministic · local · recoverable</span>
+        </span>
+      </div>
+
+      <h1 class="headline">Less output.<br />More signal.</h1>
+
+      <div class="rule"></div>
+
+      <div class="meta">
+        <span class="tagline">
+          A deterministic optimization layer for AI coding agents.
+        </span>
+        <span class="mono">MIT · 2026</span>
+      </div>
+    </div>
+  </body>
+</html>
