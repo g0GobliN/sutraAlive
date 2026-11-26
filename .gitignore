@@ -6,3 +6,7 @@ comparison/
 .DS_Store
 *.local
 npm-debug.log*
+
+# local proof captures and chat attachments
+.tmp-art/
+.cloud-attachments/
